@@ -9,9 +9,7 @@ public sealed class StreetWarsGame : Game
     public const int InitialLife = 20;
     public const int InitialHandSize = 4;
 
-    private StreetWarsGame(List<IPlayer> players) : base(players)
-    {
-    }
+    private StreetWarsGame(List<IPlayer> players) : base(players) { }
 
     public StreetWarsPlayer StreetPlayerA => (StreetWarsPlayer)Players[0];
     public StreetWarsPlayer StreetPlayerB => (StreetWarsPlayer)Players[1];
@@ -25,7 +23,6 @@ public sealed class StreetWarsGame : Game
         BuildDeck(playerA);
         BuildDeck(playerB);
         game.StartGame(InitialHandSize, InitialLife);
-
         return game;
     }
 
@@ -35,15 +32,10 @@ public sealed class StreetWarsGame : Game
     public bool IsGameOver(out string? winner)
     {
         winner = null;
-        if (GetControlledTerritories(StreetPlayerA).Count >= TerritoryVictoryCount)
-            winner = "A";
-        else if (GetControlledTerritories(StreetPlayerB).Count >= TerritoryVictoryCount)
-            winner = "B";
-        else if (!StreetPlayerA.IsAlive)
-            winner = "B";
-        else if (!StreetPlayerB.IsAlive)
-            winner = "A";
-
+        if (GetControlledTerritories(StreetPlayerA).Count >= TerritoryVictoryCount) winner = "A";
+        else if (GetControlledTerritories(StreetPlayerB).Count >= TerritoryVictoryCount) winner = "B";
+        else if (!StreetPlayerA.IsAlive) winner = "B";
+        else if (!StreetPlayerB.IsAlive) winner = "A";
         return winner is not null;
     }
 
@@ -90,7 +82,6 @@ public sealed class StreetWarsGame : Game
 
         var player = GetPlayer(playerId);
         var opponent = player == StreetPlayerA ? StreetPlayerB : StreetPlayerA;
-
         var attacker = player.Board.AllCards.OfType<StreetCarCard>()
             .FirstOrDefault(c => c.CarId.Equals(attackerId, StringComparison.OrdinalIgnoreCase));
         var target = opponent.Board.AllCards.OfType<StreetCarCard>()
@@ -123,12 +114,10 @@ public sealed class StreetWarsGame : Game
     private void CleanupDestroyedCars()
     {
         foreach (var player in Players)
+        foreach (var card in player.Board.AllCards.OfType<StreetCarCard>().Where(c => !c.IsAlive).ToList())
         {
-            foreach (var card in player.Board.AllCards.OfType<StreetCarCard>().Where(c => !c.IsAlive).ToList())
-            {
-                player.Board.Remove(card);
-                player.Graveyard.Push(card);
-            }
+            player.Board.Remove(card);
+            player.Graveyard.Push(card);
         }
     }
 
@@ -136,9 +125,9 @@ public sealed class StreetWarsGame : Game
     {
         var cars = new[]
         {
-            ("Apex", 2, 3, 4), ("Comet", 2, 4, 3), ("Raptor", 3, 5, 4),
-            ("Viper", 3, 4, 6), ("Shadow", 4, 7, 4), ("Titan", 4, 5, 8),
-            ("Nitro", 5, 8, 5), ("Interceptor", 5, 6, 9)
+            ("Apex", 1, 3, 4), ("Comet", 1, 4, 3), ("Raptor", 1, 5, 4),
+            ("Viper", 1, 4, 6), ("Shadow", 1, 7, 4), ("Titan", 1, 5, 8),
+            ("Nitro", 1, 8, 5), ("Interceptor", 1, 6, 9)
         };
 
         foreach (var (model, mana, attack, life) in cars)
