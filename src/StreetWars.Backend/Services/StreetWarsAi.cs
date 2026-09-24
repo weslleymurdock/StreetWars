@@ -14,10 +14,12 @@ public sealed class StreetWarsAi : IStreetWarsAi
         if (game.ActivePlayer != game.StreetPlayerB || game.IsGameOver(out _))
             return;
 
-        var hand = game.GetHand("B");
-        var territory = FindBestTerritory(game);
+        var card = game.GetHand("B")
+            .Where(c => c.ManaValue <= game.StreetPlayerB.ManaValue)
+            .OrderByDescending(c => c.AttackValue + c.LifeValue)
+            .FirstOrDefault();
 
-        var card = hand.OrderByDescending(c => c.AttackValue + c.LifeValue).FirstOrDefault();
+        var territory = FindBestTerritory(game);
         if (card is not null && territory >= 0)
             game.PlayCar("B", card.CarId, territory);
 
@@ -39,8 +41,7 @@ public sealed class StreetWarsAi : IStreetWarsAi
     private static (string attacker, string target)? FindAttack(StreetWarsGame game)
     {
         var target = game.StreetPlayerA.Board.AllCards.OfType<StreetCarCard>().FirstOrDefault();
-        if (target is null)
-            return null;
+        if (target is null) return null;
 
         var attacker = game.StreetPlayerB.Board.AllCards.OfType<StreetCarCard>()
             .FirstOrDefault(c => c.IsReadyToAttack);
