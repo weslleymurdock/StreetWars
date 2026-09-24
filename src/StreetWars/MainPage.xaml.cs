@@ -6,6 +6,7 @@ namespace StreetWars;
 public partial class MainPage : ContentPage
 {
     private readonly IStreetWarsClient client;
+    private string? selectedCardId;
 
     public MainPage()
     {
@@ -50,13 +51,29 @@ public partial class MainPage : ContentPage
             if (!int.TryParse(TerritoryEntry.Text, out var territory))
                 throw new InvalidOperationException("Informe um território entre 0 e 4.");
 
-            var cardId = HandLayout.Children.OfType<Button>()
-                .FirstOrDefault(b => b.BackgroundColor == Colors.Transparent)?.CommandParameter as string;
-
-            if (cardId is null)
+            if (string.IsNullOrWhiteSpace(selectedCardId))
                 throw new InvalidOperationException("Selecione uma carta da mão.");
 
-            await client.PlayCarAsync(SessionEntry.Text.Trim(), PlayerEntry.Text.Trim(), cardId, territory);
+            await client.PlayCarAsync(SessionEntry.Text.Trim(), PlayerEntry.Text.Trim(), selectedCardId, territory);
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("StreetWars", ex.Message, "OK");
+        }
+    }
+
+    private async void AttackClicked(object sender, EventArgs e)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(AttackerEntry.Text) || string.IsNullOrWhiteSpace(TargetEntry.Text))
+                throw new InvalidOperationException("Informe o ID do atacante e do alvo.");
+
+            await client.AttackAsync(
+                SessionEntry.Text.Trim(),
+                PlayerEntry.Text.Trim(),
+                AttackerEntry.Text.Trim(),
+                TargetEntry.Text.Trim());
         }
         catch (Exception ex)
         {
@@ -85,8 +102,7 @@ public partial class MainPage : ContentPage
             ? $"Turno: Player {snapshot.ActivePlayer}"
             : $"Fim de jogo: Player {snapshot.Winner} venceu.";
 
-        ScoreLabel.Text = $"A: {snapshot.PlayerALife} vida | B: {snapshot.PlayerBLife} vida";
-
+        ScoreLabel.Text = $"A: {snapshot.PlayerALife} vida | B: {snapshot.PlayerBLife}";
         TerritoriesView.ItemsSource = snapshot.Territories;
 
         HandLayout.Children.Clear();
@@ -99,15 +115,18 @@ public partial class MainPage : ContentPage
             var button = new Button
             {
                 Text = $"{card.Model}\nATK {card.Attack} / HP {card.Life}",
-                CommandParameter = card.Id,
-                BackgroundColor = Colors.Transparent
+                CommandParameter = card.Id
             };
+
             button.Clicked += (_, _) =>
             {
+                selectedCardId = (string)button.CommandParameter;
+                AttackerEntry.Text = selectedCardId;
                 foreach (var child in HandLayout.Children.OfType<Button>())
                     child.BackgroundColor = Colors.Transparent;
                 button.BackgroundColor = Colors.LightGray;
             };
+
             HandLayout.Children.Add(button);
         }
     }
