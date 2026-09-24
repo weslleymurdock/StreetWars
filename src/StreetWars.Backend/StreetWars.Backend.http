@@ -1,0 +1,6 @@
+@StreetWars.Backend_HostAddress = http://localhost:5062
+
+GET {{StreetWars.Backend_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -10,6 +10,7 @@
     <Project Path="lib/orbit/engine/Orbit.Input/Orbit.Input.csproj" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src/StreetWars.Backend/StreetWars.Backend.csproj" />
     <Project Path="src/StreetWars/StreetWars.csproj" />
   </Folder>
 </Solution>
