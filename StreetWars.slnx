@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/lib/" />
+  <Folder Name="/lib/CGE/" />
+  <Folder Name="/lib/CGE/src/">
+    <Project Path="lib/CGE/src/CardGameEngine/CardGameEngine.csproj" />
+  </Folder>
+  <Folder Name="/lib/orbit/" />
+  <Folder Name="/lib/orbit/engine/">
+    <Project Path="lib/orbit/engine/Orbit.Engine/Orbit.Engine.csproj" />
+    <Project Path="lib/orbit/engine/Orbit.Input/Orbit.Input.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/StreetWars/StreetWars.csproj" />
+  </Folder>
+</Solution>

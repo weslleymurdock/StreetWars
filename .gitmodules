@@ -1,0 +1,6 @@
+[submodule "lib/CGE"]
+	path = lib/CGE
+	url = https://github.com/weslleymurdock/CGE.git
+[submodule "lib/orbit"]
+	path = lib/orbit
+	url = https://github.com/bijington/orbit
