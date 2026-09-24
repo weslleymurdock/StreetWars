@@ -10,6 +10,7 @@ public interface IStreetWarsClient
     Task<GameSnapshot> CreateGameAsync(bool withAi);
     Task<GameSnapshot> JoinGameAsync(string sessionId);
     Task<GameSnapshot> PlayCarAsync(string sessionId, string playerId, string cardId, int territory);
+    Task<GameSnapshot> AttackAsync(string sessionId, string playerId, string attackerId, string targetId);
     Task<GameSnapshot> EndTurnAsync(string sessionId, string playerId);
 }
 
@@ -59,6 +60,12 @@ public sealed class StreetWarsClient : IStreetWarsClient, IAsyncDisposable
     {
         await ConnectAsync();
         return await connection.InvokeAsync<GameSnapshot>("PlayCar", sessionId, playerId, cardId, territory);
+    }
+
+    public async Task<GameSnapshot> AttackAsync(string sessionId, string playerId, string attackerId, string targetId)
+    {
+        await ConnectAsync();
+        return await connection.InvokeAsync<GameSnapshot>("Attack", sessionId, playerId, attackerId, targetId);
     }
 
     public async Task<GameSnapshot> EndTurnAsync(string sessionId, string playerId)
