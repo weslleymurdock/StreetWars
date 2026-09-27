@@ -11,46 +11,96 @@ public sealed class StreetWarsGame : CardGameEngine.Game
 
     private StreetWarsGame(List<IPlayer> players) : base(players) { }
 
-    public StreetWarsPlayer StreetPlayerA => (StreetWarsPlayer)Players[0];
-    public StreetWarsPlayer StreetPlayerB => (StreetWarsPlayer)Players[1];
-
-    public static StreetWarsGame Create()
+    public static StreetWarsGame Create(bool withAi)
     {
-        var playerA = new StreetWarsPlayer(new Deck());
-        var playerB = new StreetWarsPlayer(new Deck());
-        var game = new StreetWarsGame([playerA, playerB]) { ActivePlayer = playerA };
+        var players = new List<IPlayer>
+        {
+            new StreetWarsPlayer("A", new Deck())
+        };
 
-        BuildDeck(playerA);
-        BuildDeck(playerB);
-        game.StartGame(InitialHandSize, InitialLife);
+        var game = new StreetWarsGame(players)
+        {
+            ActivePlayer = players[0]
+        };
+
+        InitializePlayer((StreetWarsPlayer)players[0]);
+
+        if (withAi)
+            game.AddPlayer("B");
+
         return game;
     }
 
     public StreetWarsPlayer GetPlayer(string playerId) =>
-        playerId.Equals("A", StringComparison.OrdinalIgnoreCase) ? StreetPlayerA : StreetPlayerB;
+        Players.OfType<StreetWarsPlayer>()
+            .FirstOrDefault(p => p.PlayerId.Equals(playerId, StringComparison.OrdinalIgnoreCase))
+        ?? throw new CardGameEngineException($"Player '{playerId}' was not found.");
+
+    public string AddPlayer()
+    {
+        var playerId = ((char)('A' + Players.Count)).ToString();
+        AddPlayer(playerId);
+        return playerId;
+    }
+
+    public void AddPlayer(string playerId)
+    {
+        if (Players.Count >= 4)
+            throw new CardGameEngineException("The game supports at most four players.");
+
+        if (Players.OfType<StreetWarsPlayer>().Any(p => p.PlayerId.Equals(playerId, StringComparison.OrdinalIgnoreCase)))
+            throw new CardGameEngineException($"Player '{playerId}' already exists.");
+
+        var player = new StreetWarsPlayer(playerId, new Deck());
+        Players.Add(player);
+        InitializePlayer(player);
+    }
 
     public bool IsGameOver(out string? winner)
     {
         winner = null;
-        if (GetControlledTerritories(StreetPlayerA).Count >= TerritoryVictoryCount) winner = "A";
-        else if (GetControlledTerritories(StreetPlayerB).Count >= TerritoryVictoryCount) winner = "B";
-        else if (!StreetPlayerA.IsAlive) winner = "B";
-        else if (!StreetPlayerB.IsAlive) winner = "A";
-        return winner is not null;
+
+        if (Players.Count < 2)
+            return false;
+
+        foreach (var player in Players.OfType<StreetWarsPlayer>())
+        {
+            if (GetControlledTerritories(player).Count >= TerritoryVictoryCount)
+            {
+                winner = player.PlayerId;
+                return true;
+            }
+        }
+
+        var alive = Players.OfType<StreetWarsPlayer>().Where(p => p.IsAlive).ToList();
+        if (alive.Count == 1)
+        {
+            winner = alive[0].PlayerId;
+            return true;
+        }
+
+        return false;
     }
 
     public IReadOnlyList<int> GetControlledTerritories(IPlayer player)
     {
-        var opponent = player == StreetPlayerA ? StreetPlayerB : StreetPlayerA;
         var result = new List<int>();
 
-        for (var i = 0; i < TerritoryCount; i++)
+        for (var territory = 0; territory < TerritoryCount; territory++)
         {
-            var own = GetCardAt(player, i);
-            var enemy = GetCardAt(opponent, i);
+            var occupants = Players
+                .Select(p => (Player: p, Card: GetCardAt(p, territory)))
+                .Where(x => x.Card is not null)
+                .Select(x => (x.Player, Card: x.Card!))
+                .OrderByDescending(x => Power(x.Card))
+                .ToList();
 
-            if (own is not null && (enemy is null || Power(own) > Power(enemy)))
-                result.Add(i);
+            if (occupants.Count > 0 &&
+                occupants[0].Player == player &&
+                (occupants.Count == 1 || Power(occupants[0].Card) > Power(occupants[1].Card)))
+            {
+                result.Add(territory);
+            }
         }
 
         return result;
@@ -81,10 +131,12 @@ public sealed class StreetWarsGame : CardGameEngine.Game
         ValidatePlayerTurn(playerId);
 
         var player = GetPlayer(playerId);
-        var opponent = player == StreetPlayerA ? StreetPlayerB : StreetPlayerA;
         var attacker = player.Board.AllCards.OfType<StreetCarCard>()
             .FirstOrDefault(c => c.CarId.Equals(attackerId, StringComparison.OrdinalIgnoreCase));
-        var target = opponent.Board.AllCards.OfType<StreetCarCard>()
+
+        var target = Players
+            .Where(p => p != player)
+            .SelectMany(p => p.Board.AllCards.OfType<StreetCarCard>())
             .FirstOrDefault(c => c.CarId.Equals(targetId, StringComparison.OrdinalIgnoreCase));
 
         if (attacker is null || target is null)
@@ -118,6 +170,26 @@ public sealed class StreetWarsGame : CardGameEngine.Game
         {
             player.Board.Remove(card);
             player.Graveyard.Push(card);
+        }
+    }
+
+    private static void InitializePlayer(StreetWarsPlayer player)
+    {
+        BuildDeck(player);
+
+        player.ManaValue = 0;
+        player.ManaBaseValue = 0;
+        player.LifeValue = InitialLife;
+        player.LifeBaseValue = InitialLife;
+
+        // Draw directly during room setup so late joiners receive a normal opening hand.
+        for (var i = 0; i < InitialHandSize; i++)
+        {
+            if (!player.Deck.IsEmpty)
+            {
+                var card = player.Deck.Pop();
+                player.Hand.Push(card);
+            }
         }
     }
 
