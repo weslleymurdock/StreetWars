@@ -1,30 +1,31 @@
 # StreetWars
 
-StreetWars is a .NET 10 MAUI card game built around territory domination and the CardGameEngine.
+StreetWars is a .NET 10 MAUI multiplayer card game built around territory domination and the CardGameEngine.
 
 ## Current base game
 
-Two players fight for five city territories:
+StreetWars supports five city territories: Downtown, Industrial, Docks, Old Highway and Neon District.
 
-- Downtown
-- Industrial
-- Docks
-- Old Highway
-- Neon District
+Each territory is represented by the corresponding board slot for each CGE player. A car contributes attack + life as its territory power. The player with the highest uncontested power controls the territory. Three controlled territories win the match.
 
-Each territory is represented by the same board slot on both CGE player boards. A car occupies a territory and contributes attack + life as its territory power. A territory is controlled by the player with the greater power. Three controlled territories win the match.
+The backend supports:
+- PvP rooms with up to four players.
+- AI rooms with Player B controlled by `IStreetWarsAi`.
+- An `IPVPService`/`PvpService` abstraction for player-driven game actions.
+- In-memory room/session storage.
+- `GET /api/rooms` for available PvP rooms.
+- `POST /api/rooms` to create a PvP room.
+- `POST /api/rooms/ai` to create an AI room.
+- `POST /api/rooms/{sessionId}/join` to join a room.
+- Authenticated SignalR communication through `/hub/game`.
 
-Cars are concrete CardGameEngine.MonsterCard types and their engine component derives from MonsterCardComponent.
+## Authentication flow
 
-The backend owns the authoritative StreetWarsGame state. MAUI clients send commands through ASP.NET Core SignalR:
+The room API issues an opaque cryptographically random credential containing `SessionId`, `PlayerId` and `AccessToken`. The MAUI client receives credentials when creating or joining a room and supplies the access token through SignalR's `AccessTokenProvider`.
 
-- CreateGame
-- JoinGame
-- PlayCar
-- Attack
-- EndTurn
+The SignalR hub requires authentication and derives the session/player identity from authenticated claims. Game commands no longer accept arbitrary session/player IDs from the client.
 
-The backend can replace Player B with an IStreetWarsAi implementation registered through DI.
+Credentials and game sessions are intentionally stored in memory in this base implementation. Restarting the backend ends active rooms and invalidates credentials.
 
 ## Projects
 
@@ -35,22 +36,19 @@ The backend can replace Player B with an IStreetWarsAi implementation registered
 
 ## Running locally
 
-Start the backend with the HTTP profile:
+The backend listens on `http://0.0.0.0:7000`. The current physical Android development client uses `http://192.168.3.2:7000` and the SignalR hub is `http://192.168.3.2:7000/hub/game`.
 
-```text
-http://localhost:5062
-```
+The Android device and backend host must communicate over the LAN, and TCP port 7000 must be reachable from the device.
 
-The SignalR hub is:
+## Room UI
 
-```text
-http://localhost:5062/gameHub
-```
+- **Criar** creates a PvP room, receives Player A credentials, connects to it and refreshes the available-room list.
+- **Entrar** joins the selected room from the backend list and receives that player's credentials.
+- **Atualizar** refreshes the available-room list.
+- **Vs IA** creates an AI room, receives Player A credentials and connects to the authenticated room.
 
-On the Android emulator the MAUI client uses `10.0.2.2:5062`.
-
-The current base implementation keeps game sessions in memory. Restarting the backend ends all active games.
+The room list contains only PvP rooms that still have capacity.
 
 ## SignalR
 
-SignalR is used as the first real-time transport for the base implementation. ASP.NET Core registers the hub with `AddSignalR()` and maps it with `MapHub()`; the MAUI app uses `Microsoft.AspNetCore.SignalR.Client` 10.0.12. MQTT can be introduced later behind a transport abstraction if a deployment requires it.
+SignalR is the current real-time transport. MQTT can be introduced later behind a transport abstraction if required.
