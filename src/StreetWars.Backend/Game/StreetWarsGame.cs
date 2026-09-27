@@ -24,6 +24,8 @@ public sealed class StreetWarsGame : CardGameEngine.Game
         };
 
         InitializePlayer((StreetWarsPlayer)players[0]);
+        players[0].ManaValue = 1;
+        players[0].ManaBaseValue = 1;
 
         if (withAi)
             game.AddPlayer("B");
