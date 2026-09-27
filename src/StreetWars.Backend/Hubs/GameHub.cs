@@ -7,7 +7,7 @@ using StreetWars.Backend.Services;
 namespace StreetWars.Backend.Hubs;
 
 [Authorize]
-public sealed class GameHub(IGameSessionStore sessions, IPvpService pvp, IStreetWarsAi ai) : Hub
+public sealed class GameHub(IGameSessionStore sessions, IPVPService pvp, IStreetWarsAi ai) : Hub
 {
     public override async Task OnConnectedAsync()
     {
