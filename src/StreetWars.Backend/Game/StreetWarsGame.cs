@@ -2,7 +2,7 @@ using CardGameEngine;
 
 namespace StreetWars.Backend.Game;
 
-public sealed class StreetWarsGame : Game
+public sealed class StreetWarsGame : CardGameEngine.Game
 {
     public const int TerritoryCount = 5;
     public const int TerritoryVictoryCount = 3;

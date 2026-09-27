@@ -23,9 +23,7 @@ public sealed class StreetWarsClient : IStreetWarsClient, IAsyncDisposable
 
     public StreetWarsClient()
     {
-        var url = DeviceInfo.Platform == DevicePlatform.Android
-            ? "http://10.0.2.2:5062/gameHub"
-            : "http://localhost:5062/gameHub";
+        var url = "http://192.168.3.2:7000/hub/game";
 
         connection = new HubConnectionBuilder()
             .WithUrl(url)

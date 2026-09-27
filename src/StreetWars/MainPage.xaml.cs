@@ -27,7 +27,7 @@ public partial class MainPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("StreetWars", ex.Message, "OK");
+            await DisplayAlertAsync("StreetWars", ex.Message, "OK");
         }
     }
 
@@ -40,7 +40,7 @@ public partial class MainPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("StreetWars", ex.Message, "OK");
+            await DisplayAlertAsync("StreetWars", ex.Message, "OK");
         }
     }
 
@@ -58,7 +58,7 @@ public partial class MainPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("StreetWars", ex.Message, "OK");
+            await DisplayAlertAsync("StreetWars", ex.Message, "OK");
         }
     }
 
@@ -77,7 +77,7 @@ public partial class MainPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("StreetWars", ex.Message, "OK");
+            await DisplayAlertAsync("StreetWars", ex.Message, "OK");
         }
     }
 
@@ -89,7 +89,7 @@ public partial class MainPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("StreetWars", ex.Message, "OK");
+            await DisplayAlertAsync("StreetWars", ex.Message, "OK");
         }
     }
 

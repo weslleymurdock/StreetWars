@@ -2,32 +2,17 @@ using CardGameEngine;
 
 namespace StreetWars.Backend.Game;
 
-public sealed class StreetWarsPlayer : Player
+public sealed class StreetWarsPlayer(IDeck deck) : Player(deck)
 {
-    public StreetWarsPlayer(IDeck deck) : base(deck)
-    {
-    }
 }
 
-public sealed class StreetCarComponent : MonsterCardComponent
+public sealed class StreetCarComponent(int mana, int attack, int life, string part) : MonsterCardComponent(mana, attack, life)
 {
-    public string Part { get; }
-
-    public StreetCarComponent(int mana, int attack, int life, string part)
-        : base(mana, attack, life)
-    {
-        Part = part;
-    }
+    public string Part { get; } = part;
 }
 
-public sealed class StreetCarCard : MonsterCard
+public sealed class StreetCarCard(IPlayer owner, string id, string model, int mana, int attack, int life) : MonsterCard([new StreetCarComponent(mana, attack, life, "Engine")], owner)
 {
-    public string CarId => Name;
-    public string Model { get; }
-
-    public StreetCarCard(IPlayer owner, string id, string model, int mana, int attack, int life)
-        : base([new StreetCarComponent(mana, attack, life, "Engine")], owner, id)
-    {
-        Model = model;
-    }
+    public string CarId { get; } = id;
+    public string Model { get; } = model;
 }
