@@ -14,6 +14,7 @@ public interface IGameSessionStore
     GameSession Get(string sessionId);
     IReadOnlyList<RoomInfo> GetOpenRooms();
     RoomAccess Join(string sessionId);
+    RoomAccess CreatePlayerCredential(GameSession session, string playerId);
     bool TryAuthenticate(string accessToken, out string sessionId, out string playerId);
 }
 
