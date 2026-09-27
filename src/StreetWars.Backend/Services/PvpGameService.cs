@@ -2,7 +2,7 @@ using StreetWars.Backend.Game;
 
 namespace StreetWars.Backend.Services;
 
-public interface IPvpService
+public interface IPVPService
 {
     void PlayCar(StreetWarsGame game, string playerId, string cardId, int territory);
     void Attack(StreetWarsGame game, string playerId, string attackerId, string targetId);
