@@ -6,24 +6,75 @@ namespace StreetWars;
 public partial class MainPage : ContentPage
 {
     private readonly IStreetWarsClient client;
+    private RoomInfo? selectedRoom;
     private string? selectedCardId;
+    private string currentPlayerId = "A";
 
     public MainPage()
     {
         InitializeComponent();
         client = Application.Current!.Handler.MauiContext!.Services.GetRequiredService<IStreetWarsClient>();
         client.StateChanged += OnStateChanged;
-        _ = client.ConnectAsync();
+        _ = RefreshRoomsAsync();
+    }
+
+    private async void RefreshRoomsClicked(object sender, EventArgs e) =>
+        await RefreshRoomsAsync();
+
+    private async Task RefreshRoomsAsync()
+    {
+        try
+        {
+            RoomsView.ItemsSource = await client.GetRoomsAsync();
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlertAsync("StreetWars", ex.Message, "OK");
+        }
+    }
+
+    private void RoomSelectionChanged(object sender, SelectionChangedEventArgs e) =>
+        selectedRoom = e.CurrentSelection.FirstOrDefault() as RoomInfo;
+
+    private async void CreateRoomClicked(object sender, EventArgs e)
+    {
+        try
+        {
+            var access = await client.CreateRoomAsync();
+            await EnterRoomAsync(access);
+            await RefreshRoomsAsync();
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlertAsync("StreetWars", ex.Message, "OK");
+        }
+    }
+
+    private async void JoinSelectedRoomClicked(object sender, EventArgs e)
+    {
+        try
+        {
+            if (selectedRoom is null)
+                throw new InvalidOperationException("Selecione uma sala disponível.");
+
+            var access = await client.JoinRoomAsync(selectedRoom.Id);
+            await EnterRoomAsync(access);
+            selectedRoom = null;
+            RoomsView.SelectedItem = null;
+            await RefreshRoomsAsync();
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlertAsync("StreetWars", ex.Message, "OK");
+        }
     }
 
     private async void CreateAiClicked(object sender, EventArgs e)
     {
         try
         {
-            var snapshot = await client.CreateGameAsync(true);
-            SessionEntry.Text = snapshot.SessionId;
-            PlayerEntry.Text = "A";
-            Render(snapshot);
+            var access = await client.CreateAiGameAsync();
+            await EnterRoomAsync(access);
         }
         catch (Exception ex)
         {
@@ -31,17 +82,14 @@ public partial class MainPage : ContentPage
         }
     }
 
-    private async void JoinClicked(object sender, EventArgs e)
+    private async Task EnterRoomAsync(RoomAccess access)
     {
-        try
-        {
-            var snapshot = await client.JoinGameAsync(SessionEntry.Text.Trim());
-            Render(snapshot);
-        }
-        catch (Exception ex)
-        {
-            await DisplayAlertAsync("StreetWars", ex.Message, "OK");
-        }
+        currentPlayerId = access.PlayerId;
+        SessionEntry.Text = access.SessionId;
+        PlayerEntry.Text = access.PlayerId;
+
+        await client.ConnectAsync(access);
+        Render(await client.GetStateAsync());
     }
 
     private async void PlayClicked(object sender, EventArgs e)
@@ -54,7 +102,7 @@ public partial class MainPage : ContentPage
             if (string.IsNullOrWhiteSpace(selectedCardId))
                 throw new InvalidOperationException("Selecione uma carta da mão.");
 
-            await client.PlayCarAsync(SessionEntry.Text.Trim(), PlayerEntry.Text.Trim(), selectedCardId, territory);
+            await client.PlayCarAsync(selectedCardId, territory);
         }
         catch (Exception ex)
         {
@@ -69,11 +117,7 @@ public partial class MainPage : ContentPage
             if (string.IsNullOrWhiteSpace(AttackerEntry.Text) || string.IsNullOrWhiteSpace(TargetEntry.Text))
                 throw new InvalidOperationException("Informe o ID do atacante e do alvo.");
 
-            await client.AttackAsync(
-                SessionEntry.Text.Trim(),
-                PlayerEntry.Text.Trim(),
-                AttackerEntry.Text.Trim(),
-                TargetEntry.Text.Trim());
+            await client.AttackAsync(AttackerEntry.Text.Trim(), TargetEntry.Text.Trim());
         }
         catch (Exception ex)
         {
@@ -85,7 +129,7 @@ public partial class MainPage : ContentPage
     {
         try
         {
-            await client.EndTurnAsync(SessionEntry.Text.Trim(), PlayerEntry.Text.Trim());
+            await client.EndTurnAsync();
         }
         catch (Exception ex)
         {
@@ -102,15 +146,20 @@ public partial class MainPage : ContentPage
             ? $"Turno: Player {snapshot.ActivePlayer}"
             : $"Fim de jogo: Player {snapshot.Winner} venceu.";
 
-        ScoreLabel.Text = $"A: {snapshot.PlayerALife} vida | B: {snapshot.PlayerBLife}";
+        var me = snapshot.Players.FirstOrDefault(p =>
+            p.Id.Equals(currentPlayerId, StringComparison.OrdinalIgnoreCase));
+
+        ScoreLabel.Text = me is null
+            ? $"Sala: {snapshot.Players.Count} jogadores"
+            : $"Você: Player {me.Id} | Vida {me.Life} | Mana {me.Mana}";
+
+        PlayersView.ItemsSource = snapshot.Players;
         TerritoriesView.ItemsSource = snapshot.Territories;
 
         HandLayout.Children.Clear();
-        var player = PlayerEntry.Text.Trim().Equals("B", StringComparison.OrdinalIgnoreCase)
-            ? snapshot.PlayerBHand
-            : snapshot.PlayerAHand;
+        selectedCardId = null;
 
-        foreach (var card in player)
+        foreach (var card in me?.Hand ?? [])
         {
             var button = new Button
             {
@@ -121,7 +170,6 @@ public partial class MainPage : ContentPage
             button.Clicked += (_, _) =>
             {
                 selectedCardId = (string)button.CommandParameter;
-                AttackerEntry.Text = selectedCardId;
                 foreach (var child in HandLayout.Children.OfType<Button>())
                     child.BackgroundColor = Colors.Transparent;
                 button.BackgroundColor = Colors.LightGray;
