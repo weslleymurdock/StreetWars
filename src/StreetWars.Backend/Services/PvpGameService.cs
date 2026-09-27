@@ -1,0 +1,22 @@
+using StreetWars.Backend.Game;
+
+namespace StreetWars.Backend.Services;
+
+public interface IPvpService
+{
+    void PlayCar(StreetWarsGame game, string playerId, string cardId, int territory);
+    void Attack(StreetWarsGame game, string playerId, string attackerId, string targetId);
+    void EndTurn(StreetWarsGame game, string playerId);
+}
+
+public sealed class PvpService : IPvpService
+{
+    public void PlayCar(StreetWarsGame game, string playerId, string cardId, int territory) =>
+        game.PlayCar(playerId, cardId, territory);
+
+    public void Attack(StreetWarsGame game, string playerId, string attackerId, string targetId) =>
+        game.Attack(playerId, attackerId, targetId);
+
+    public void EndTurn(StreetWarsGame game, string playerId) =>
+        game.EndTurn(playerId);
+}
