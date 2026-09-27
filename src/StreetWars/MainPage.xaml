@@ -28,7 +28,7 @@
                         <Frame Padding="10" Margin="2">
                             <Grid ColumnDefinitions="*,Auto">
                                 <Label Text="{Binding Id}" FontAttributes="Bold" />
-                                <Label Grid.Column="1" Text="{Binding Players, StringFormat='{0}/{1}'}" />
+                                <Label Grid.Column="1" Text="{Binding Players, StringFormat='Jogadores: {0}'}" />
                             </Grid>
                         </Frame>
                     </DataTemplate>
@@ -47,7 +47,9 @@
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <Frame Padding="8" Margin="2">
-                            <Label Text="{Binding Id, StringFormat='Player {0} | Vida {1} | Mana {2}'}" />
+                            <Label Text="{Binding Id, StringFormat='Player {0}'}" />
+                            <Label Text="{Binding Life, StringFormat='Vida: {0}'}" />
+                            <Label Text="{Binding Mana, StringFormat='Mana: {0}'}" />
                         </Frame>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
