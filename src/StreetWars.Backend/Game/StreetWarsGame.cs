@@ -188,7 +188,7 @@ public sealed class StreetWarsGame : CardGameEngine.Game
             if (!player.Deck.IsEmpty)
             {
                 var card = player.Deck.Pop();
-                player.Hand.Push(card);
+                player.Hand.Add(card);
             }
         }
     }
