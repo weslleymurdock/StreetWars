@@ -13,7 +13,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddSignalR();
 builder.Services.AddOpenApi();
 builder.Services.AddSingleton<IGameSessionStore, GameSessionStore>();
-builder.Services.AddSingleton<IPVPService, PvpService>();
+builder.Services.AddSingleton<IPVPService, PVPService>();
 builder.Services.AddSingleton<IStreetWarsAi, StreetWarsAi>();
 builder.WebHost.UseUrls("http://0.0.0.0:7000");
 

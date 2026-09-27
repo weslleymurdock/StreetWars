@@ -9,7 +9,7 @@ public interface IPVPService
     void EndTurn(StreetWarsGame game, string playerId);
 }
 
-public sealed class PvpService : IPvpService
+public sealed class PVPService : IPVPService
 {
     public void PlayCar(StreetWarsGame game, string playerId, string cardId, int territory) =>
         game.PlayCar(playerId, cardId, territory);
